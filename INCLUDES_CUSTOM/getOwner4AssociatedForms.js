@@ -5,7 +5,7 @@
 function getOwner4AssociatedForms(pCapId){
 	try{
 		capOwnerArr = null;
-		var s_result = aa.owner.getOwnerByCapId(pCapId, null);
+		var s_result = aa.owner.getOwnerByCapId(pCapId);
 		if (s_result.getSuccess()) {
 			capOwnerArr = s_result.getOutput();
 		} else {
