@@ -17,9 +17,9 @@ function updateOrigFromAmend(){
 		var originalCap = getParent(capId);
 
 		if (originalCap != false){
-			var addressModel = getAddress4AssociatedForms(capId);  	//returns false if no addresses or the first on the cap
-			var parcelModel = getParcel4AssociatedForms(capId);		//returns false if no parcel or the first on the cap
-			var ownerModel = getOwner4AssociatedForms(capId);		//returns false if no owner or the first on the cap
+			addressModel = getAddress4AssociatedForms(capId);  	//returns false if no addresses or the first on the cap
+			parcelModel = getParcel4AssociatedForms(capId);		//returns false if no parcel or the first on the cap
+			ownerModel = getOwner4AssociatedForms(capId);		//returns false if no owner or the first on the cap
 			updateParent();
 		}
 		
