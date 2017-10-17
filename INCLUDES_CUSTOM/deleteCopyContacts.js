@@ -2,7 +2,7 @@
 //jec 171016 conversion begin
 //formerly within UPDATEORIGFROMAMEND
 function deleteCopyContacts(pFromCapId, pToCapId) {
-	try{
+	try {
 		//Copies all contacts from pFromCapId to pToCapId
 		//
 		// like original but delete all existing contacts before copy
@@ -13,15 +13,15 @@ function deleteCopyContacts(pFromCapId, pToCapId) {
 			var Contacts = capContactResult.getOutput();
 			for (yy in Contacts) {
 				var con = Contacts[yy];
-				//if(con.getCapContactModel().getPeople().getContactType()=="Application Contact"){
 				logDebug("Contact Type=" + con.getCapContactModel().getPeople().getContactType());
 				var capContactId = con.getPeople().getContactSeqNumber();
 				delResult = aa.people.removeCapContact(pToCapId, capContactId);
 				if (!delResult.getSuccess()) {
 					logDebug("Error removing contacts on target Cap " + delResult.getErrorMessage());
 				}
-				//}
 			}
+		} else {
+			logDebug("No contacts to remove on target Cap");
 		}
 
 		var capContactResult = aa.people.getCapContactByCapID(pFromCapId);
@@ -30,21 +30,18 @@ function deleteCopyContacts(pFromCapId, pToCapId) {
 			var Contacts = capContactResult.getOutput();
 			for (yy in Contacts) {
 				var newContact = Contacts[yy].getCapContactModel();
-				// Copy only the Application Contanct
-				//if(Contacts[yy].getCapContactModel().getPeople().getContactType()=="Application Contact"){
 				newContact.setCapID(vToCapId);
-				//aa.people.createCapContact(newContact);
 				aa.people.createCapContactWithAttribute(newContact);
 				copied++;
 				logDebug("Copied contact from " + pFromCapId.getCustomID() + " to " + vToCapId.getCustomID());
-				//}
 			}
+			return copied;
 		} else {
 			logMessage("**ERROR: Failed to get contacts: " + capContactResult.getErrorMessage());
 			return false;
 		}
-		return copied;
-	}catch (err){
+
+	} catch (err) {
 		logDebug("A JavaScript Error occured in custom function deleteCopyContacts: " + err.message + " In Line " + err.lineNumber);
 	}
 }
