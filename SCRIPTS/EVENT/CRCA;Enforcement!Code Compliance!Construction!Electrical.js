@@ -1,6 +1,7 @@
 //DLH 171012 conversion begin
 
-aa.runScript("ADDRESSDUPLICATEFORACA");
+//aa.runScript("ADDRESSDUPLICATEFORACA");
+capIdsGetByMatchingAddr();   //replacing malfunctioning code - jchalk - 10.25.17
 editChannelReported("Online");
 ad = aa.address.getAddressByCapId(capId).getOutput();
 if (ad[0].getHouseNumberStart() != null) {
