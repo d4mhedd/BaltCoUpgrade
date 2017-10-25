@@ -8,6 +8,8 @@
 | Action# : N/A
 |
 | Notes   : new loadAppSpecific function from Achievo - 10/22/09 DMH
+|			This code was removed from use.  Is redundant (ASA scripting on renew link takes care of this)
+|			-JChalk 10.25.17
 |
 /------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------------------------------/
