@@ -1,7 +1,8 @@
 //DLH 171012 conversion begin
 
 if ((wfTask==("Closure") && wfStatus==("Approved"))) {
-	aa.runScript("UPDATEORIGFROMAMEND");
+	//aa.runScript("UPDATEORIGFROMAMEND");
+	updateOrigFromAmend();         //Replacing old methodology - jec 10/25/17
 	}
 
 if (wfTask==("Development Plan Decision") && (wfStatus ==("Approved") || wfStatus ==("Disapproved") || wfStatus ==("Approved with Conditions") )) {
