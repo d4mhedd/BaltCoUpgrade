@@ -11,7 +11,8 @@ function runPetLicenseReport(){
 		
 		if (appTypeArray[0] == "License" && appTypeArray[2] == "Pet"){
 			var capIDString = pCapId.getCustomID();
-			var reptMessage = runReportAttach(pCapId,"Animal License Certificate","ALTID",capIDString);
+			//var reptMessage = runReportAttach(pCapId,"Animal License Certificate","ALTID",capIDString);
+			var reptMessage = runReportAttachBaltCo("Animal License Certificate","ALTID",capIDString);
 			logDebug(reptMessage);
 		}else{
 			logDebug("This record type is not designed for the Animal License Certificate");
