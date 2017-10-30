@@ -122,13 +122,13 @@ showMessage = true;
 comment("You have indicated the sewage system is private.  If so, please fill out a Rental Exemption application instead of a Rental Registration License application.");
 }
 
-if (AInfo['Smoke Connected'] == "No") {  //expression
+if (AInfo['Smoke Connected'] == "No") {
 cancel = true;
 showMessage = true;
 comment("Smoke Detectors must be inter-connected per regulation");
 }
 
-if ((AInfo['Number of Smoke Detectors'] == 0)) {   //expression
+if ((AInfo['Number of Smoke Detectors'] == 0)) {
 cancel = true;
 showMessage = true;
 comment("Property must have at least one Smoke Dectector");
