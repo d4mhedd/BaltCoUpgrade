@@ -10,7 +10,8 @@ if ((publicUser == false && currentUserID != "BALTCOGO")) {
 	}
 
 if (currentUserID == "BALTCOGO") {
-	aa.runScriptInNewTransaction("ADDRESSDUPLICATEFORACA");
+	//aa.runScript("ADDRESSDUPLICATEFORACA");
+	capIdsGetByMatchingAddr();   //@TODO: not yet tested in 9.x prior to conversion - jchalk - 10.30.17
 	editChannelReported("Online");
 	}
 
