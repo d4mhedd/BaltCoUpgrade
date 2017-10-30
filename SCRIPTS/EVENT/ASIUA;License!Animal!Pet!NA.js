@@ -19,7 +19,8 @@ if (isTaskStatus("License Issuance","Issued")) {
 	}
 
 if (isTaskStatus("License Issuance","Issued")) {
-	aa.runScript("RunReport");
+	//aa.runScript("RunReport");
+	runPetLicenseReport();     //Modified 10.30.17 for rewritten code
 	}
 	
 //DLH 171012 conversion end
