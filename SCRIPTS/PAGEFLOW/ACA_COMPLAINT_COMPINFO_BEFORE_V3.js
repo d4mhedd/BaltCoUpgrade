@@ -7,7 +7,7 @@
 | Client  : Baltimore County
 | Action# : N/A
 |
-| Notes   : Rewritten to resolve architectural differences in Pageflow Table loading and written to 3.0
+| Notes   : Rewritten to resolve architectural differences in Pageflow Table loading and written to 3.0 
 |			EMSE Best Practices - 10.9.17 - jchalk
 |
 /------------------------------------------------------------------------------------------------------*/
@@ -26,6 +26,7 @@ var debug = ""; // Debug String
 var br = "<BR>"; // Break Tag
 var cap = aa.env.getValue("CapModel");
 var capId = cap.getCapID();
+//var useCustomScriptFile = true;  			// if true, use Events->Custom Script, else use Events->Scripts->INCLUDES_CUSTOM
 
 /*------------------------------------------------------------------------------------------------------/
 | END User Configurable Parameters
@@ -36,11 +37,51 @@ var message = ""; // Message String
 var debug = ""; // Debug String
 var br = "<BR>"; // Break Tag
 
+/*var useSA = false;
+var SA = null;
+var SAScript = null;
+var bzr = aa.bizDomain.getBizDomainByValue("MULTI_SERVICE_SETTINGS", "SUPER_AGENCY_FOR_EMSE");
+if (bzr.getSuccess() && bzr.getOutput().getAuditStatus() != "I") {
+	useSA = true;
+	SA = bzr.getOutput().getDescription();
+	bzr = aa.bizDomain.getBizDomainByValue("MULTI_SERVICE_SETTINGS", "SUPER_AGENCY_INCLUDE_SCRIPT");
+	if (bzr.getSuccess()) {
+		SAScript = bzr.getOutput().getDescription();
+	}
+}
+
+if (SA) {
+	eval(getScriptText("INCLUDES_ACCELA_FUNCTIONS",SA,useCustomScriptFile));
+	eval(getScriptText(SAScript, SA));
+} else {
+	eval(getScriptText("INCLUDES_ACCELA_FUNCTIONS",null,useCustomScriptFile));
+}
+
+eval(getScriptText("INCLUDES_CUSTOM",null,useCustomScriptFile));
+
+
+function getScriptText(vScriptName, servProvCode, useProductScripts) {
+	if (!servProvCode)  servProvCode = aa.getServiceProviderCode();
+	vScriptName = vScriptName.toUpperCase();
+	var emseBiz = aa.proxyInvoker.newInstance("com.accela.aa.emse.emse.EMSEBusiness").getOutput();
+	try {
+		if (useProductScripts) {
+			var emseScript = emseBiz.getMasterScript(aa.getServiceProviderCode(), vScriptName);
+		} else {
+			var emseScript = emseBiz.getScriptByPK(aa.getServiceProviderCode(), vScriptName, "ADMIN");
+		}
+		return emseScript.getScriptText() + "";
+	} catch (err) {
+		return "";
+	}
+}
+*/
+
 loadASITables4ACA(cap);
-if (typeof(TYPEOFCOMPLAINT) != "object") {
+if (typeof(TYPEOFCOMPLAINT)!="object") {
 	showMessage = true;
 	comment("An entry is required in the Type of Complaint table before submitting the new Record");
-	cancel = true;
+	cancel=true;
 }
 
 // page flow custom code end
@@ -64,6 +105,7 @@ if (debug.indexOf("**ERROR") > 0) {
 			aa.env.setValue("ErrorMessage", debug);
 	}
 }
+
 
 /*------------------------------------------------------------------------------------------------------/
 | <===========External Functions (used by Action entries)
@@ -124,12 +166,12 @@ function comment(cstr) {
 
 function logDebug(dstr) {
 	vLevel = 1
-		if (arguments.length > 1)
-			vLevel = arguments[1];
-		if ((showDebug & vLevel) == vLevel || vLevel == 1)
-			debug += dstr + br;
-		if ((showDebug & vLevel) == vLevel)
-			aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), dstr);
+	if (arguments.length > 1)
+		vLevel = arguments[1];
+	if ((showDebug & vLevel) == vLevel || vLevel == 1)
+		debug += dstr + br;
+	if ((showDebug & vLevel) == vLevel)
+		aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), dstr);
 }
 
 function logMessage(dstr) {
