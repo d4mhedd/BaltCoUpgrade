@@ -1,5 +1,10 @@
 //DLH 171012 conversion begin
 
+if ((wfTask==("Closure") && wfStatus==("Approved"))) {
+	//aa.runScript("UPDATEORIGFROMAMEND");
+	updateOrigFromAmend();         //Replacing old methodology - jec 10/25/17
+	}
+
 if (wfTask==("Development Plan Conference") && wfStatus ==("Completed")) {
 	closeTask("Development Plan Review","Completed","Closed via Script","","PRPUDAMD");
 	}
