@@ -14,7 +14,7 @@ function runReportPrint(reportToPrint, reportCapIdModel) {
 
 		//runReportAttach(pCapId, "Animal License Certificate", "ALTID", capIDString);
 		var certRptParamHashMap = aa.util.newHashMap();
-		certRptParamHashMap.put("ALTID", String(reportCapIdModel.getCustomID()));
+		certRptParamHashMap.put("ALTID", String(reportCapIdModel.getCustomID())); 
 
 		if (certReportModelObj)
 			certURI = aa.reportManager.runReport(certRptParamHashMap, certReportModelObj);
