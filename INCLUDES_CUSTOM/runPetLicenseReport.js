@@ -14,7 +14,7 @@ function runPetLicenseReport() {
 			runReportPrint("Animal License Certificate", pCapId);
 			logDebug("Report Successfully Generated.");
 		} else {
-			logDebug("This record type is not designed for the Animal License Certificate");
+			logDebug("This record type is not designed for the Animal License Certificate"); 
 		}
 	} catch (err) {
 		logDebug("A JavaScript Error occured in custom function runPetLicenseReport: " + err.message + " In Line " + err.lineNumber);
