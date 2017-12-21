@@ -11,6 +11,7 @@
 | Action# : N/A
 |
 | Notes   : Rewritten to 3.0 EMSE Best Practices - 10.9.17 - jchalk
+|           Adding logic to test for pre-existing rows - 11.27.17 - jchalk
 |
 /------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------------------------------/
@@ -48,16 +49,42 @@ conditionTable = new Array();
 base = new Array();
 base["Comments"] = " ";
 base["Method of Submission"] = " ";
-row = base.slice(0);
-row["Document Type"] = new asiTableValObj("Document Type", "Carbon Monoxide Alarm Verification", "Y");
-row["Method of Submission"] = new asiTableValObj("Method of Submission", " ", "N");
-row["Comments"] = new asiTableValObj("Comments", "", "N");
-conditionTable.push(row);
 
-if (addConditions)
-	addStdCondition("Document", "Carbon Monoxide Alarm Verification");
 
-if ((AInfo['Section 8'] == "Yes")) {
+var coAlarmExist = false;
+var secEightExist = false;
+var inspSheetExist = false;
+var leadCertExist = false;
+
+if (typeof(DOCUMENTS) == "object") {
+	for (eachRow in DOCUMENTS) {
+		if (DOCUMENTS[eachRow]["Document Type"] == "Carbon Monoxide Alarm Verification")
+			coAlarmExist = true;
+		if (DOCUMENTS[eachRow]["Document Type"] == "Section 8/MBQ Inspection Letter")
+			secEightExist = true;
+		if (DOCUMENTS[eachRow]["Document Type"] == "Inspection Sheet")
+			inspSheetExist = true;
+		if (DOCUMENTS[eachRow]["Document Type"] == "Lead Inspection Certificate")
+			leadCertExist = true;
+	}
+}
+
+aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), "coAlarmExist = " + coAlarmExist);
+aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), "secEightExist = " + secEightExist);
+aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), "inspSheetExist = " + inspSheetExist);
+aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), "leadCertExist = " + leadCertExist);
+
+if (!coAlarmExist) {
+	row = base.slice(0);
+	row["Document Type"] = new asiTableValObj("Document Type", "Carbon Monoxide Alarm Verification", "Y");
+	row["Method of Submission"] = new asiTableValObj("Method of Submission", " ", "N");
+	row["Comments"] = new asiTableValObj("Comments", "", "N");
+	conditionTable.push(row);
+	if (addConditions)
+		addStdCondition("Document", "Carbon Monoxide Alarm Verification");
+}
+
+if ((AInfo['Section 8'] == "Yes") && !secEightExist) {
 	row = base.slice(0);
 	row["Document Type"] = new asiTableValObj("Document Type", "Section 8/MBQ Inspection Letter", "Y");
 	row["Method of Submission"] = new asiTableValObj("Method of Submission", " ", "N");
@@ -67,7 +94,7 @@ if ((AInfo['Section 8'] == "Yes")) {
 		addStdCondition("Document", "Section 8/MBQ Inspection Letter");
 }
 
-if ((AInfo['Section 8'] == "No")) {
+if ((AInfo['Section 8'] == "No") && !inspSheetExist) {
 	row = base.slice(0);
 	row["Document Type"] = new asiTableValObj("Document Type", "Inspection Sheet", "Y");
 	row["Method of Submission"] = new asiTableValObj("Method of Submission", "", "N");
@@ -77,7 +104,7 @@ if ((AInfo['Section 8'] == "No")) {
 		addStdCondition("Document", "Inspection Sheet");
 }
 
-if (AInfo['Before 1950'] == "Yes") {
+if (AInfo['Before 1950'] == "Yes" && !leadCertExist) {
 	row = base.slice(0);
 	row["Document Type"] = new asiTableValObj("Document Type", "Lead Inspection Certificate", "Y");
 	row["Method of Submission"] = new asiTableValObj("Method of Submission", "", "N");
@@ -89,9 +116,12 @@ if (AInfo['Before 1950'] == "Yes") {
 
 asit = cap.getAppSpecificTableGroupModel();
 new_asit = addASITable4ACAPageFlow(asit, "DOCUMENTS", conditionTable);
+
 if (new_asit) {
 	cap.setAppSpecificTableGroupModel(new_asit);
+	//aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), "setTableResult is: " + setTableResult);
 	aa.env.setValue("CapModel", cap);
+	//aa.cap.editCapByPK(CapModel);
 }
 
 aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), "number of requirements that will be added = " + conditionTable.length);
@@ -121,6 +151,15 @@ if (debug.indexOf("**ERROR") > 0) {
 /*------------------------------------------------------------------------------------------------------/
 | <===========External Functions (used by Action entries)
 /------------------------------------------------------------------------------------------------------*/
+function logDebug(dstr) {
+	vLevel = 1
+		if (arguments.length > 1)
+			vLevel = arguments[1];
+		if ((showDebug & vLevel) == vLevel || vLevel == 1)
+			debug += dstr + br;
+		if ((showDebug & vLevel) == vLevel)
+			aa.debug(aa.getServiceProviderCode() + " : " + aa.env.getValue("CurrentUserID"), dstr);
+}
 
 function loadASITables4ACA(iCap) {
 
@@ -202,8 +241,6 @@ function addASITable4ACAPageFlow(destinationTableGroupModel, tableName, tableVal
 	//  tableValueArray is an array of associative array values.  All elements MUST be either a string or asiTableVal object
 	//
 
-	var addDebug = false;
-
 	var itemCap = capId
 		if (arguments.length > 3)
 			itemCap = arguments[3]; // use cap ID specified in args
@@ -225,20 +262,27 @@ function addASITable4ACAPageFlow(destinationTableGroupModel, tableName, tableVal
 		return false;
 	}
 
-	var fld = aa.util.newArrayList(); // had to do this since it was coming up null.
-	var fld_readonly = aa.util.newArrayList(); // had to do this since it was coming up null.
 	var i = -1; // row index counter
+	if (tsm.getTableFields() != null) {
+		i = 0 - tsm.getTableFields().size()
+	}
 
 	for (thisrow in tableValueArray) {
-
+		var fld = aa.util.newArrayList(); // had to do this since it was coming up null.
+		var fld_readonly = aa.util.newArrayList(); // had to do this since it was coming up null.
 		var col = tsm.getColumns()
 			var coli = col.iterator();
 		while (coli.hasNext()) {
 			var colname = coli.next();
 
-			if (typeof(tableValueArray[thisrow][colname.getColumnName()]) == "object") // we are passed an asiTablVal Obj
+			if (!tableValueArray[thisrow][colname.getColumnName()]) {
+				logDebug("addToASITable: null or undefined value supplied for column " + colname.getColumnName() + ", setting to empty string");
+				tableValueArray[thisrow][colname.getColumnName()] = "";
+			}
+
+			if (typeof(tableValueArray[thisrow][colname.getColumnName()].fieldValue) != "undefined") // we are passed an asiTablVal Obj
 			{
-				var args = new Array(tableValueArray[thisrow][colname.getColumnName()].fieldValue, colname);
+				var args = new Array(tableValueArray[thisrow][colname.getColumnName()].fieldValue ? tableValueArray[thisrow][colname.getColumnName()].fieldValue : "", colname);
 				var fldToAdd = aa.proxyInvoker.newInstance("com.accela.aa.aamain.appspectable.AppSpecificTableField", args).getOutput();
 				fldToAdd.setRowIndex(i);
 				fldToAdd.setFieldLabel(colname.getColumnName());
@@ -247,35 +291,9 @@ function addASITable4ACAPageFlow(destinationTableGroupModel, tableName, tableVal
 				fld.add(fldToAdd);
 				fld_readonly.add(tableValueArray[thisrow][colname.getColumnName()].readOnly);
 
-				goo = fldToAdd;
-
-				if (addDebug) {
-					logDebug("   ======ADDING Field from Object to Column " + colname.getColumnName() + "========== " + goo + "  : " + goo.getClass());
-					logDebug("        =Property=======  rowIndex  = " + goo.getRowIndex());
-					logDebug("        =Property=======  getDisplayProperty  = " + goo.getDisplayProperty());
-					logDebug("        =Property=======  getNameSuffix  = " + goo.getNameSuffix());
-					logDebug("        =Property=======  getFieldGroup  = " + goo.getFieldGroup());
-					logDebug("        =Property=======  getFieldLabel  = " + goo.getFieldLabel());
-					logDebug("        =Property=======  getFieldType  = " + goo.getFieldType());
-					logDebug("        =Property=======  getDisplayOrder  = " + goo.getDisplayOrder());
-					logDebug("        =Property=======  isRequired  = " + goo.isRequired());
-					logDebug("        =Property=======  isSearchAble  = " + goo.isSearchAble());
-					logDebug("        =Property=======  getMaxLength  = " + goo.getMaxLength());
-					logDebug("        =Property=======  getDisplayLength  = " + goo.getDisplayLength());
-					logDebug("        =Property=======  getStatus  = " + goo.getStatus());
-					logDebug("        =Property=======  getUnit  = " + goo.getUnit());
-					logDebug("        =Property=======  getIndex  = " + goo.getIndex());
-					logDebug("        =Property=======  inputValue  = " + goo.getInputValue());
-					logDebug("        =Property=======  getErrorTip  = " + goo.getErrorTip());
-					logDebug("        =Property=======  getSelectOptions  = " + goo.getSelectOptions());
-					logDebug("        =Property=======  getFieldID  = " + goo.getFieldID());
-					logDebug("        =Property=======  isRequiredFeeCalc  = " + goo.isRequiredFeeCalc());
-					logDebug("        =Property=======  isReadOnly  = " + goo.isReadOnly());
-					logDebug("        =Property=======  getRowIndex  = " + goo.getRowIndex());
-				}
 			} else // we are passed a string
 			{
-				var args = new Array(tableValueArray[thisrow][colname.getColumnName()], colname);
+				var args = new Array(tableValueArray[thisrow][colname.getColumnName()] ? tableValueArray[thisrow][colname.getColumnName()] : "", colname);
 				var fldToAdd = aa.proxyInvoker.newInstance("com.accela.aa.aamain.appspectable.AppSpecificTableField", args).getOutput();
 				fldToAdd.setRowIndex(i);
 				fldToAdd.setFieldLabel(colname.getColumnName());
@@ -283,47 +301,27 @@ function addASITable4ACAPageFlow(destinationTableGroupModel, tableName, tableVal
 				fldToAdd.setReadOnly(false);
 				fld.add(fldToAdd);
 				fld_readonly.add("N");
-				goo = fldToAdd;
 
-				if (addDebug) {
-					logDebug("   ======ADDING Field from String to  Column " + colname.getColumnName() + "========== " + goo + "  : " + goo.getClass());
-					logDebug("        =Property=======  rowIndex  = " + goo.getRowIndex());
-					logDebug("        =Property=======  getDisplayProperty  = " + goo.getDisplayProperty());
-					logDebug("        =Property=======  getNameSuffix  = " + goo.getNameSuffix());
-					logDebug("        =Property=======  getFieldGroup  = " + goo.getFieldGroup());
-					logDebug("        =Property=======  getFieldLabel  = " + goo.getFieldLabel());
-					logDebug("        =Property=======  getFieldType  = " + goo.getFieldType());
-					logDebug("        =Property=======  getDisplayOrder  = " + goo.getDisplayOrder());
-					logDebug("        =Property=======  isRequired  = " + goo.isRequired());
-					logDebug("        =Property=======  isSearchAble  = " + goo.isSearchAble());
-					logDebug("        =Property=======  getMaxLength  = " + goo.getMaxLength());
-					logDebug("        =Property=======  getDisplayLength  = " + goo.getDisplayLength());
-					logDebug("        =Property=======  getStatus  = " + goo.getStatus());
-					logDebug("        =Property=======  getUnit  = " + goo.getUnit());
-					logDebug("        =Property=======  getIndex  = " + goo.getIndex());
-					logDebug("        =Property=======  inputValue  = " + goo.getInputValue());
-					logDebug("        =Property=======  getErrorTip  = " + goo.getErrorTip());
-					logDebug("        =Property=======  getSelectOptions  = " + goo.getSelectOptions());
-					logDebug("        =Property=======  getFieldID  = " + goo.getFieldID());
-					logDebug("        =Property=======  isRequiredFeeCalc  = " + goo.isRequiredFeeCalc());
-					logDebug("        =Property=======  isReadOnly  = " + goo.isReadOnly());
-					logDebug("        =Property=======  getRowIndex  = " + goo.getRowIndex());
-				}
 			}
 		}
 
 		i--;
 
+		if (tsm.getTableFields() == null) {
+			tsm.setTableFields(fld);
+		} else {
+			tsm.getTableFields().addAll(fld);
+		}
+
+		if (tsm.getReadonlyField() == null) {
+			tsm.setReadonlyField(fld_readonly); // set readonly field
+		} else {
+			tsm.getReadonlyField().addAll(fld_readonly);
+		}
 	}
 
-	tsm.setTableField(fld);
-	tsm.setReadonlyField(fld_readonly); // set readonly field
-
-
 	tssm = tsm;
-
 	return destinationTableGroupModel;
-
 }
 
 function loadAppSpecific4ACA(thisArr) {

@@ -13,6 +13,9 @@
 |
 | Notes   : Rewritten to resolve architectural differences in Pageflow Table loading and written to 3.0
 |			EMSE Best Practices - 10.9.17 - jchalk
+|			Modified to add requirements to catch Legal Agent (9.0 upgrade design/expression 
+|			conflict) - 11.22.17 - jchalk
+|			Amended to catch if LLC or outside of MD - 11.27.17 - jchalk
 |
 /------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------------------------------/
@@ -81,67 +84,74 @@ if (appMatch("License/Animal/Pet/Renewal")) {
 
 	checkRabiesCertificate();
 }
-/*
+
 //License/Rental Housing/Registration/*
 if (appMatch("License/Rental Housing/Registration/*")) {
-//Before 1950
-if (AInfo['Before 1950'] == "Yes") {
-if (AInfo['Registered'] == "No") {
-cancel = true;
-showMessage = true;
-comment("Is this property Lead registered with Maryland Department of Environment (MDE)?");
-}
+	//Before 1950
+	if (AInfo['Before 1950'] == "Yes") {
+		if (AInfo['Registered'] == "No") {
+			cancel = true;
+			showMessage = true;
+			comment("Is this property Lead registered with Maryland Department of Environment (MDE)?");
+		}
 
-//Registered
-if (AInfo['Registered'] == "Yes") {
-//MDE No Blank
-if ((AInfo['MDE No'] == null || AInfo['MDE No'] == "")) {
-cancel = true;
-showMessage = true;
-comment("Maryland Department of Environment (MDE) Tracking #: ");
-} else {
-//MDE No not Blank
-if (AInfo['Reg Current'] == "No") {
-cancel = true;
-showMessage = true;
-comment("Is the property Lead registration current?");
-}
+		//Registered
+		if (AInfo['Registered'] == "Yes") {
+			//MDE No Blank
+			if ((AInfo['MDE No'] == null || AInfo['MDE No'] == "")) {
+				cancel = true;
+				showMessage = true;
+				comment("Maryland Department of Environment (MDE) Tracking #: ");
+			} else {
+				//MDE No not Blank
+				if (AInfo['Reg Current'] == "No") {
+					cancel = true;
+					showMessage = true;
+					comment("Is the property Lead registration current?");
+				}
 
-if ((AInfo['Lead Cert No'] == null || AInfo['Lead Cert No'] == "") && AInfo['Reg Current'] == "Yes") {
-cancel = true;
-showMessage = true;
-comment("What is your Lead Certificate # for current tenancy?");
-}
-}
-}
-}
+				if ((AInfo['Lead Cert No'] == null || AInfo['Lead Cert No'] == "") && AInfo['Reg Current'] == "Yes") {
+					cancel = true;
+					showMessage = true;
+					comment("What is your Lead Certificate # for current tenancy?");
+				}
+			}
+		}
+	}
 
-if (AInfo['Sewage System'] == "Private") {
-cancel = true;
-showMessage = true;
-comment("You have indicated the sewage system is private.  If so, please fill out a Rental Exemption application instead of a Rental Registration License application.");
-}
+	if (AInfo['Sewage System'] == "Private") {
+		cancel = true;
+		showMessage = true;
+		comment("You have indicated the sewage system is private.  If so, please fill out a Rental Exemption application instead of a Rental Registration License application.");
+	}
 
-if (AInfo['Smoke Connected'] == "No") {
-cancel = true;
-showMessage = true;
-comment("Smoke Detectors must be inter-connected per regulation");
-}
+	if (AInfo['Smoke Connected'] == "No") {
+		cancel = true;
+		showMessage = true;
+		comment("Smoke Detectors must be inter-connected per regulation");
+	}
 
-if ((AInfo['Number of Smoke Detectors'] == 0)) {
-cancel = true;
-showMessage = true;
-comment("Property must have at least one Smoke Dectector");
-}
+	if ((AInfo['Number of Smoke Detectors'] == 0)) {
+		cancel = true;
+		showMessage = true;
+		comment("Property must have at least one Smoke Dectector");
+	}
 
-if ((AInfo['Not Owner Occupied Unit/Apartment'] > 6)) {
-cancel = true;
-showMessage = true;
-comment("If property have more than 6 units you will need to apply for a Rental Exemption not a Rental License.");
-}
+	if ((AInfo['Not Owner Occupied Unit/Apartment'] > 6)) {
+		cancel = true;
+		showMessage = true;
+		comment("If property have more than 6 units you will need to apply for a Rental Exemption not a Rental License.");
+	}
+
+	//Add contact check if Legal Agent isn't provided - written to replace expression, 11.22.17, jec, amended per etenney sharepoint comment 11.27.17
+	if ((AInfo["Does the Property Owner Live in Maryland?"] == "No" || AInfo["Type of Property Owner"] == "LLC") && !doesCapContactExist4ACA("Legal Agent")) {
+		cancel = true;
+		showMessage = true;
+		comment("Legal Agent is required.");
+	}
 }
 // page flow custom code end
- */
+
 
 if (debug.indexOf("**ERROR") > 0) {
 	aa.env.setValue("ErrorCode", "1");
@@ -419,5 +429,29 @@ function checkRabiesCertificate() {
 				comment(r[x]);
 			}
 		}
+	}
+}
+
+
+function doesCapContactExist4ACA(typeToCheck) {
+	try {
+		var contactTypeExists = false;
+		var capContacts = cap.getContactsGroup();
+		var capContArray = capContacts.toArray();
+
+		if (capContArray.length < 1) {
+			return false;
+		}
+
+		for (x in capContArray) {
+			var thisContType = capContArray[x].getPeople().getContactType();
+			if (thisContType.toUpperCase() == typeToCheck.toUpperCase()) {
+				contactTypeExists = true;
+			}
+		}
+		return contactTypeExists;
+	} catch (err) {
+		logDebug("An error occurred in doesCapContactExist4ACA: " + err.message);
+		logDebug(err.stack);
 	}
 }
