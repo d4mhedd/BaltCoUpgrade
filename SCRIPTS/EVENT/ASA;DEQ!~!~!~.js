@@ -1,0 +1,2 @@
+//ASA;DEQ!~!~!~
+UTILITYDEQMODULE.setDefaultWorkflowAssignToDept();
